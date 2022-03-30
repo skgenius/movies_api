@@ -74,6 +74,11 @@ class Movie
      */
     private $share_email_count;
 
+    /**
+     * @ORM\Column(type="bigint", nullable=true)
+     */
+    private $id_api;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -207,6 +212,18 @@ class Movie
     public function setShareEmailCount(?int $share_email_count): self
     {
         $this->share_email_count = $share_email_count;
+
+        return $this;
+    }
+
+    public function getIdApi(): ?string
+    {
+        return $this->id_api;
+    }
+
+    public function setIdApi(?string $id_api): self
+    {
+        $this->id_api = $id_api;
 
         return $this;
     }

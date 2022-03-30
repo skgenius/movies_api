@@ -59,7 +59,7 @@ class MovieRepository extends ServiceEntityRepository
                  ->getQuery()
                  ->execute();
         return $query;
-}
+    }
 
     public function storeListFromApi() {         
         $results = $this->webservice->getData('movie/now_playing', array());
@@ -69,6 +69,7 @@ class MovieRepository extends ServiceEntityRepository
         //Store 20 records
         foreach($results['results'] AS $result) {
             $entity = new Movie();
+            $entity->setIdApi($result['id']);
             $entity->setOriginalLanguage($result['original_language']);
             $entity->setOriginalTitle($result['original_title']);
             $entity->setOverview($result['overview']);
@@ -82,6 +83,32 @@ class MovieRepository extends ServiceEntityRepository
             $entity->setShareEmailCount(0);
             $this->add($entity); 
         } 
+    }
+
+
+    public function getAll()
+    {
+        $em = $this->registry->getManager();
+        $cn = $em->getConnection();
+        $st = $cn->prepare(
+            "SELECT condition.id, condition.titre, condition.reponse_obligatoire, 
+            condition.reponse_multiple, condition.question_libelle, condition.is_actif, 
+                COALESCE(jsonb_agg(distinct jsonb_build_object(    
+                    'id', condition_questions.id,
+                    'libelle', condition_questions.reponse_libelle,
+                    'reponse', condition_questions.reponse
+                    )::jsonb) FILTER (WHERE condition_questions.is_actif = TRUE) ,'[]'::jsonb) AS reponses 
+            FROM condition
+            left join condition_questions on condition_questions.condition_id = condition.id 
+                WHERE condition.is_actif = TRUE
+                GROUP BY condition.id"
+        );
+        $st->execute();
+        $result = $st->fetchAll();
+        foreach ($result as $key => $field) {
+            $result[$key]['reponses'] = json_decode($field['reponses']);
+        }
+        return $result;
     }
 
     // /**
