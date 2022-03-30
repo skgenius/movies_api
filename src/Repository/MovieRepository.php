@@ -53,8 +53,20 @@ class MovieRepository extends ServiceEntityRepository
         }
     }
 
+    public function removeAll(){
+        $query = $this->createQueryBuilder('e')
+                 ->delete()
+                 ->getQuery()
+                 ->execute();
+        return $query;
+}
+
     public function storeListFromApi() {         
         $results = $this->webservice->getData('movie/now_playing', array());
+        //Ensure to store 20 records
+        if($results['results']) $this->removeAll();
+
+        //Store 20 records
         foreach($results['results'] AS $result) {
             $entity = new Movie();
             $entity->setOriginalLanguage($result['original_language']);
